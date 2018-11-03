@@ -21,34 +21,37 @@ namespace lmr
     void read_cb(struct bufferevent *bev, void *ctx)
     {
         header h;
+        int len = 0;
         netcomm *net = (netcomm*)ctx;
         struct evbuffer *input = bufferevent_get_input(bev);
-        int len = evbuffer_get_length(input);
-        if (len < sizeof(header))
-            return;
-
-        evbuffer_copyout(input, &h, sizeof(header));
-        if (len < sizeof(header) + h.length)
-            return;
-        len = sizeof(header) + h.length;
-
-        char *data = new char[len];
-        bufferevent_read(bev, data, len);
-
-        if (h.type == netcomm_type::LMR_HELLO)
+        while (len = evbuffer_get_length(input))
         {
-            int remote_index = h.src;
-            net->net_buffer[remote_index] = bev;
-            net->net_um[bev] = remote_index;
-            delete[] data;
-            fprintf(stderr, "connected from %d\n", h.src);
-        }else if (net->cbfun){
-            pthread_t ntid;
-            pthread_data *pd = new pthread_data;
-            pd->data = data;
-            pd->cbfun = net->cbfun;
-            pd->net = net;
-            pthread_create(&ntid, nullptr, pthread_cb, pd);
+            if (len < sizeof(header))
+                break;
+
+            evbuffer_copyout(input, &h, sizeof(header));
+            if (len < sizeof(header) + h.length)
+                break;
+            len = sizeof(header) + h.length;
+
+            char *data = new char[len];
+            bufferevent_read(bev, data, len);
+
+            if (h.type == netcomm_type::LMR_HELLO)
+            {
+                int remote_index = h.src;
+                net->net_buffer[remote_index] = bev;
+                net->net_um[bev] = remote_index;
+                delete[] data;
+                fprintf(stderr, "connected from %d\n", h.src);
+            }else if (net->cbfun){
+                pthread_t ntid;
+                pthread_data *pd = new pthread_data;
+                pd->data = data;
+                pd->cbfun = net->cbfun;
+                pd->net = net;
+                pthread_create(&ntid, nullptr, pthread_cb, pd);
+            }
         }
     }
 
@@ -99,6 +102,15 @@ namespace lmr
         bufferevent_enable(bev, EV_READ|EV_WRITE);
     }
 
+    void accept_error_cb(struct evconnlistener *listener, void *ctx)
+    {
+        struct event_base *base = (struct event_base *) ctx;
+        int err = EVUTIL_SOCKET_ERROR();
+        fprintf(stderr, "Got an error %d (%s) on the listener. "
+                        "Shutting down.\n", err, evutil_socket_error_to_string(err));
+
+        exit(1);
+    }
 
     netcomm::netcomm(string configfile, int index, pcbfun f)
     {
@@ -199,7 +211,7 @@ namespace lmr
         pthread_t ntid;
         struct sockaddr_in sin;
 
-//        evthread_use_pthreads();
+        evthread_use_pthreads();
         net_base = event_base_new();
 
         memset(&sin, 0, sizeof(sin));
@@ -210,6 +222,12 @@ namespace lmr
                                            LEV_OPT_REUSEABLE|LEV_OPT_CLOSE_ON_FREE|LEV_OPT_THREADSAFE, -1,
                                            (struct sockaddr*)&sin, sizeof(sin));
 
+        if(!listener)
+        {
+            perror("could't not create listener");
+            exit(1);
+        }
+        evconnlistener_set_error_cb(listener, accept_error_cb);
 
         pthread_create (&ntid, nullptr, [] (void *arg) -> void * {
                             event_base_dispatch((struct event_base *)arg);

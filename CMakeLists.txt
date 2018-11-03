@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8)
 project(lmr_main)
 
 # set(CMAKE_CXX_STANDARD 11)
-set(LIBS lmr event_core pthread)
+set(LIBS lmr event_core event_pthreads pthread)
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
 include_directories("/usr/local/include")

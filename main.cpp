@@ -23,9 +23,9 @@ void cb(header h, char* data, netcomm* net)
 int main(int argc, char *argv[])
 {
     int index;
-    netcomm net("config.txt", index, cb);
 
     index = atoi(argv[1]);
+    netcomm net("config.txt", index, cb);
 
     if (index)
     {
