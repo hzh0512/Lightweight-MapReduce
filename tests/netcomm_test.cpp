@@ -1,4 +1,4 @@
-#include "netcomm.h"
+#include "../src/netcomm.h"
 
 using namespace std;
 using namespace lmr;

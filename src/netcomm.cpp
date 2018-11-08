@@ -81,6 +81,7 @@ namespace lmr
         }else if (events & BEV_EVENT_ERROR) {
             fprintf(stderr, "Got an error %s, connection to %d closed.\n",
                     evutil_socket_error_to_string(EVUTIL_SOCKET_ERROR()), remote_index);
+            exit(1);
         }else{
             return;
         }
