@@ -14,7 +14,7 @@ namespace lmr
     public:                                                             \
         typedef base_class* (*Creator)();                               \
                                                                         \
-        void add_creator(string class_name, Creator creator) {          \
+        void add_creator(const string& class_name, Creator creator) {   \
             um_creator[class_name] = creator;                           \
         }                                                               \
                                                                         \
@@ -24,32 +24,22 @@ namespace lmr
             else                                                        \
                 return nullptr;                                         \
         }                                                               \
-        static BaseClassRegister_##base_class* get_instance() {         \
-            if (instance)                                               \
-                return instance;                                        \
-            else                                                        \
-                return instance = new BaseClassRegister_##base_class;   \
-        }                                                               \
     private:                                                            \
-        static BaseClassRegister_##base_class* instance;                \
-        BaseClassRegister_##base_class() {}                             \
-        ~BaseClassRegister_##base_class() {                             \
-            if (instance){                                              \
-                delete instance;                                        \
-                instance = nullptr;                                     \
-            }                                                           \
-        }                                                               \
         unordered_map<string, Creator> um_creator;                      \
     };                                                                  \
-    BaseClassRegister_##base_class*                                     \
-        BaseClassRegister_##base_class::instance = nullptr;             \
+                                                                        \
+    inline BaseClassRegister_##base_class&                              \
+            BaseClassRegister_getinstance_##base_class() {              \
+        static BaseClassRegister_##base_class instance;                 \
+        return instance;                                                \
+    }                                                                   \
                                                                         \
     class BaseClassRegisterAdder_##base_class {                         \
     public:                                                             \
         BaseClassRegisterAdder_##base_class(                            \
             const string& class_name,                                   \
             BaseClassRegister_##base_class::Creator creator) {          \
-            BaseClassRegister_##base_class::get_instance()->add_creator(\
+            BaseClassRegister_getinstance_##base_class().add_creator(   \
                 class_name, creator);                                   \
         }                                                               \
     };
@@ -65,8 +55,8 @@ namespace lmr
 
 
 #define CHILD_CLASS_CREATOR(base_class, child_class)                    \
-    BaseClassRegister_##base_class::                                    \
-        get_instance()->create_object(child_class)
+    BaseClassRegister_getinstance_##base_class().                       \
+        create_object(child_class)
 
 }
 
