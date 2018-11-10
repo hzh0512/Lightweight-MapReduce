@@ -28,10 +28,16 @@ namespace lmr
         unsigned int length, src, dst;
     } header;
 
-    typedef void (*pcbfun)(header, char*, netcomm*);
+    typedef void (*pcbfun)(header*, char*, netcomm*);
 
     enum netcomm_type {
-        LMR_HELLO, // type 0: hello message
+        LMR_HELLO,               // hello message
+        LMR_CHECKIN,             // checkin
+        LMR_CLOSE,               // close immediately
+        LMR_ASSIGN_MAPPER,       // assign input files, output format
+        LMR_MAPPER_DONE,         // mapper finished
+        LMR_ASSIGN_REDUCER,      // assign input format, output format, indices
+        LMR_REDUCER_DONE,        // reducer finished
     };
 
     class netcomm
@@ -46,6 +52,9 @@ namespace lmr
         void send(int dst, unsigned short type, char *src, int size);
         void send(int dst, unsigned short type, string data);
         int gettotalnum();
+        void wait();
+
+        vector<pair<string, uint16_t>> endpoints;
 
     private:
         void readconfig(string &configfile);
@@ -58,7 +67,6 @@ namespace lmr
         struct evconnlistener *listener = nullptr;
         int myindex;
         pcbfun cbfun;
-        vector<pair<string, uint16_t>> endpoints;
     };
 
 }

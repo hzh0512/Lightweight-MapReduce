@@ -12,7 +12,7 @@ namespace lmr
     void* pthread_cb(void* _data)
     {
         pthread_data *pd = (pthread_data*) _data;
-        pd->cbfun(*(header*)(pd->data), pd->data + sizeof(header), pd->net);
+        pd->cbfun((header*)(pd->data), pd->data + sizeof(header), pd->net);
         delete[] pd->data;
         delete (char*)_data;
         return nullptr;
@@ -71,7 +71,6 @@ namespace lmr
             h.version = CURVERSION;
 
             bufferevent_write(bev, &h, sizeof(h));
-
             net->net_buffer[remote_index] = bev;
             return;
         }
@@ -149,8 +148,22 @@ namespace lmr
         h.length = size;
         h.type = type;
         bufferevent_write(net_buffer[dst], &h, sizeof(header));
+
         if (size && src)
             bufferevent_write(net_buffer[dst], src, size);
+    }
+
+    void netcomm::wait()
+    {
+        for (int i = 0; i < net_buffer.size(); ++i)
+        {
+            if (net_buffer[i])
+            {
+                struct evbuffer *output = bufferevent_get_output(net_buffer[i]);
+                while (evbuffer_get_length(output))
+                    sleep_us(1000);
+            }
+        }
     }
 
     void netcomm::send(int dst, unsigned short type, string data)
@@ -163,19 +176,48 @@ namespace lmr
         h.version = CURVERSION;
         h.length = data.size() + 1;
         h.type = type;
+
         bufferevent_write(net_buffer[dst], &h, sizeof(header));
         if (data.size())
             bufferevent_write(net_buffer[dst], data.c_str(), data.size() + 1);
     }
 
+    string hostname_to_ip(string hostname)
+    {
+        char ip[100];
+        struct hostent *he;
+        struct in_addr **addr_list;
+
+        he = gethostbyname(hostname.c_str());
+        addr_list = (struct in_addr **)he->h_addr_list;
+
+        if (addr_list[0])
+        {
+            strcpy(ip, inet_ntoa(*addr_list[0]));
+            return ip;
+        }else
+        {
+            fprintf(stderr, "cannot resolve %s", hostname.c_str());
+            return "";
+        }
+    }
 
     void netcomm::readconfig(string &configfile)
     {
         ifstream f(configfile);
         uint16_t port;
         string ip;
+        getline(f, ip);  // user:password on first line
         while (f >> ip >> port)
+        {
+            if (inet_addr(ip.c_str()) == INADDR_NONE)
+            {
+                ip = hostname_to_ip(ip);
+                if (ip.empty())
+                    continue;
+            }
             endpoints.emplace_back(make_pair(ip, port));
+        }
         net_buffer.resize(endpoints.size());
         if (endpoints.empty())
         {

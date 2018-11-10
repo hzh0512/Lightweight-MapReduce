@@ -13,8 +13,8 @@ namespace lmr
     {
         HashFunction hashfunc = JSHash;
         MapInput* mapinput = nullptr;
-        string mapper_class, reducer_class, config_file;
-        int num_machines = 0;
+        string mapper_class, reducer_class, config_file, program_file;
+        int num_reducers = 0, index = 0;
     } MapReduceSpecification;
 }
 

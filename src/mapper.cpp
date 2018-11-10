@@ -22,7 +22,6 @@ namespace lmr
             fprintf(stderr, "no assigned mapinput.\n");
             exit(1);
         }
-
         init();
         while (mapinput->get_next(key, value))
             Map(key, value);
