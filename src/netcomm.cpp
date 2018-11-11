@@ -77,16 +77,18 @@ namespace lmr
 
         if (events & BEV_EVENT_EOF) {
             fprintf(stderr, "Connection to %d closed.\n", remote_index);
+            net->net_um.erase(bev);
+            net->net_buffer[remote_index] = nullptr;
+            bufferevent_free(bev);
         }else if (events & BEV_EVENT_ERROR) {
             fprintf(stderr, "Got an error %s, connection to %d closed.\n",
                     evutil_socket_error_to_string(EVUTIL_SOCKET_ERROR()), remote_index);
+            bufferevent_free(bev);
             exit(1);
         }else{
+            fprintf(stderr, "other events???\n");
             return;
         }
-        net->net_um.erase(bev);
-        net->net_buffer[remote_index] = nullptr;
-        bufferevent_free(bev);
     }
 
 
@@ -96,7 +98,8 @@ namespace lmr
         netcomm *net = (netcomm*)ctx;
         struct bufferevent *bev;
 
-        bev = bufferevent_socket_new(net->net_base, fd, BEV_OPT_CLOSE_ON_FREE);
+        bev = bufferevent_socket_new(net->net_base, fd, BEV_OPT_CLOSE_ON_FREE | BEV_OPT_THREADSAFE | BEV_OPT_DEFER_CALLBACKS);
+        evbuffer_enable_locking(bufferevent_get_output(bev), nullptr);
 
         bufferevent_setcb(bev, read_cb, nullptr, event_cb, net);
         bufferevent_enable(bev, EV_READ|EV_WRITE);
@@ -147,23 +150,13 @@ namespace lmr
         h.version = CURVERSION;
         h.length = size;
         h.type = type;
-        bufferevent_write(net_buffer[dst], &h, sizeof(header));
 
+        struct evbuffer* outputBuffer = bufferevent_get_output(net_buffer[dst]);
+        evbuffer_lock(outputBuffer);
+        evbuffer_add(outputBuffer, &h, sizeof(header));
         if (size && src)
-            bufferevent_write(net_buffer[dst], src, size);
-    }
-
-    void netcomm::wait()
-    {
-        for (int i = 0; i < net_buffer.size(); ++i)
-        {
-            if (net_buffer[i])
-            {
-                struct evbuffer *output = bufferevent_get_output(net_buffer[i]);
-                while (evbuffer_get_length(output))
-                    sleep_us(1000);
-            }
-        }
+            evbuffer_add(outputBuffer, src, size);
+        evbuffer_unlock(outputBuffer);
     }
 
     void netcomm::send(int dst, unsigned short type, string data)
@@ -177,9 +170,24 @@ namespace lmr
         h.length = data.size() + 1;
         h.type = type;
 
-        bufferevent_write(net_buffer[dst], &h, sizeof(header));
+        struct evbuffer* outputBuffer = bufferevent_get_output(net_buffer[dst]);
+        evbuffer_lock(outputBuffer);
+        evbuffer_add(outputBuffer, &h, sizeof(header));
         if (data.size())
-            bufferevent_write(net_buffer[dst], data.c_str(), data.size() + 1);
+            evbuffer_add(outputBuffer, data.c_str(), data.size() + 1);
+        evbuffer_unlock(outputBuffer);
+    }
+
+    void netcomm::wait()
+    {
+        if (myindex == 0)
+        {
+            for (int i = 1; i < net_buffer.size(); ++i)
+            {
+                while (net_buffer[i])
+                    sleep_us(1000);
+            }
+        }
     }
 
     string hostname_to_ip(string hostname)
@@ -239,7 +247,9 @@ namespace lmr
         sin.sin_addr.s_addr = inet_addr(endpoints[index].first.c_str());
         sin.sin_port = htons(endpoints[index].second);
 
-        bev = bufferevent_socket_new(net_base, -1, BEV_OPT_CLOSE_ON_FREE);
+        bev = bufferevent_socket_new(net_base, -1, BEV_OPT_CLOSE_ON_FREE | BEV_OPT_THREADSAFE |BEV_OPT_DEFER_CALLBACKS);
+        evbuffer_enable_locking(bufferevent_get_output(bev), nullptr);
+
         net_um[bev] = index;
         bufferevent_enable(bev, EV_READ|EV_WRITE);
         bufferevent_setcb(bev, read_cb, nullptr, event_cb, this);
