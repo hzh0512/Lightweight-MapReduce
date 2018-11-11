@@ -2,6 +2,8 @@
 #define LMR_MAPREDUCE_H
 
 #include <ctime>
+#include <unordered_map>
+#include <vector>
 #include "libssh/libssh.h"
 #include "unistd.h"
 #include "spec.h"
