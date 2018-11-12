@@ -57,6 +57,7 @@ namespace lmr
             if (!dist_run_files())
             {
                 fprintf(stderr, "distribution error. cannot run workers.\n");
+                net->wait();
                 exit(1);
             }
             while (!isready)
@@ -139,23 +140,23 @@ namespace lmr
         password = base64_decode(password);
 
         // run workers
+        unordered_map<string, vector<pair<int,int>>> um;
         for (int i = 1; i < total; ++i)
-        {
-            string cmd = "cd " + cwd +
-                    " && mkdir -p output" +
-                    " && ./" + spec->program_file + " " + to_string(i) +
-                    " &> output/output" + to_string(i) + ".txt &";
-            if (net->endpoints[i].first == "127.0.0.1")
-                system(cmd.c_str());
-            else
-                if (!run_sshcmd(net->endpoints[i].first, username, password, cmd))
-                {
-                    for (int j = i - 1; j > 0; --j)
-                        net->send(j, netcomm_type::LMR_CLOSE, nullptr, 0);
-                    return false;
-                }
-        }
+            um[net->endpoints[i].first].push_back(make_pair(i, net->endpoints[i].second));
 
+        for (auto &p : um)
+        {
+            string cmd = "cd " + cwd + " && mkdir -p output";
+            for (auto &p2 : p.second)
+            {
+                cmd += " && (./" + spec->program_file + " " + to_string(p2.first) +
+                       " &> output/output" + to_string(p2.first) + ".txt &)";
+            }
+            if (p.first == "127.0.0.1")
+                system(cmd.c_str());
+            else if (!run_sshcmd(p.first, username, password, cmd))
+                return false;
+        }
         return true;
     }
 }

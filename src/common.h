@@ -10,8 +10,8 @@ using namespace std;
 inline void sleep_us(int useconds)
 {
     struct timespec ts;
-    ts.tv_sec = 0;
-    ts.tv_nsec = useconds;
+    ts.tv_sec = useconds / 1000000;
+    ts.tv_nsec = 1000 * (useconds % 1000000);
     nanosleep(&ts, nullptr);
 }
 
