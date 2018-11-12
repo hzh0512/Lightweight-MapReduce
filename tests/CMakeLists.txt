@@ -14,5 +14,8 @@ target_link_libraries(mapinput_test ${LIBS})
 add_executable(mapper_test mapper_test.cpp)
 target_link_libraries(mapper_test ${LIBS})
 
+add_executable(reducer_test reducer_test.cpp)
+target_link_libraries(reducer_test ${LIBS})
+
 add_executable(mapreduce_hello_test mapreduce_hello_test.cpp)
 target_link_libraries(mapreduce_hello_test ${LIBS})
