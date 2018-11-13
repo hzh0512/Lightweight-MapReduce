@@ -1,5 +1,5 @@
-#ifndef LMR_MAPPER_H
-#define LMR_MAPPER_H
+#ifndef LMR_REDUCER_H
+#define LMR_REDUCER_H
 
 #include <string>
 #include <vector>
@@ -18,14 +18,11 @@ namespace lmr
     class Reducer
     {
     public:
-        virtual void init() {}
         virtual void Reduce(const string& key, const string& value) = 0;
         virtual ~Reducer(){}
 
         void set_reduceinput(ReduceInput* _reduceinput) { reduceinput = _reduceinput; }
-        void set_hashfunc(HashFunction _hashfunc) { hashfunc = _hashfunc; }
         void set_outputfile(const string& _outputfile) { outputfile = _outputfile; }
-        void set_nummapper(int _num) { num_mapper = _num; }
 
         void reducework();
         void output();
@@ -35,8 +32,6 @@ namespace lmr
         void emit(string key, string value);
 
     private:
-        HashFunction hashfunc = JSHash;
-        int num_mapper = 0;
         string outputfile;
         ReduceInput* reduceinput = nullptr;
     };
@@ -50,4 +45,4 @@ namespace lmr
         CHILD_CLASS_CREATOR(Reducer,reducer_name)
 }
 
-#endif //LMR_MAPPER_H
+#endif //LMR_REDUCER_H

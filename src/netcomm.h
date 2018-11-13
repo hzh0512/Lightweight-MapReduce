@@ -34,10 +34,10 @@ namespace lmr
         LMR_HELLO,               // hello message
         LMR_CHECKIN,             // checkin
         LMR_CLOSE,               // close immediately
-        LMR_ASSIGN_MAPPER,       // assign input files, output format
-        LMR_MAPPER_DONE,         // mapper finished
-        LMR_ASSIGN_REDUCER,      // assign input format, output format, indices
-        LMR_REDUCER_DONE,        // reducer finished
+        LMR_ASSIGN_MAPPER,       // output format (_%d_%d), input_indices
+        LMR_MAPPER_DONE,         // finished_indices
+        LMR_ASSIGN_REDUCER,      // assign input format(_%d_(fixed))
+        LMR_REDUCER_DONE,        // DONE
     };
 
     class netcomm

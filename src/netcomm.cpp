@@ -131,6 +131,7 @@ namespace lmr
                 bufferevent_free(net_buffer[i]);
             }
         }
+        evconnlistener_free(listener);
         event_base_loopexit(net_base, NULL);
         event_base_free(net_base);
     }

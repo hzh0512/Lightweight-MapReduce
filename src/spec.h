@@ -12,9 +12,8 @@ namespace lmr
     typedef struct
     {
         HashFunction hashfunc = JSHash;
-        MapInput* mapinput = nullptr;
-        string mapper_class, reducer_class, config_file, program_file;
-        int num_reducers = 0, index = 0;
+        string input_format, output_format, mapper_class, reducer_class, config_file, program_file;
+        int num_inputs = 0, num_mappers = 0, num_reducers = 0, index = 0;
     } MapReduceSpecification;
 }
 

@@ -15,7 +15,6 @@ namespace lmr
             fprintf(stderr, "no assigned mapinput.\n");
             exit(1);
         }
-        init();
         while (reduceinput->get_next(key, value))
             Reduce(key, value);
     }
