@@ -2,32 +2,25 @@
 
 namespace lmr
 {
-    void Reducer::emit(string key, string value)
-    {
-        out.insert(make_pair(key, value));
-    }
-
     void Reducer::reducework()
     {
         string key, value;
+        out.open(outputfile);
         if (!reduceinput)
         {
             fprintf(stderr, "no assigned mapinput.\n");
             exit(1);
         }
         init();
-        while (reduceinput->get_next(key, value))
-            Reduce(key, value);
+        while (reduceinput->Get_next(key, value))
+            (Reduce(key, value));
+        out.close();
     }
 
-    void Reducer::output()
+    void Reducer::output(string key, string value)
     {
-        ofstream f;
-        f.open(outputfile);
-        for (auto &j : out)
-        {
-            f << j.first.size() << "\t" << j.first << "\t" << j.second << "\n";
+        if (key.size() > 0){
+            out << key.size() << "\t" << key << "\t" << value << "\n";
         }
-        f.close();
     }
 }
