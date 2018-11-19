@@ -23,16 +23,20 @@ namespace lmr
 
         void set_reduceinput(ReduceInput* _reduceinput) { reduceinput = _reduceinput; }
         void set_outputfile(const string& _outputfile) { outputfile = _outputfile; }
+        void set_nummapper(int _num) { num_mapper = _num; }
+        string key_, value_;
 
         void reducework();
-        void output();
-        map<string, string> out;
+        void output(string key, string value);
 
     protected:
-        void emit(string key, string value);
+        //void emit(string key, string value);
 
     private:
+        HashFunction hashfunc = JSHash;
+        int num_mapper = 0;
         string outputfile;
+        ofstream out;
         ReduceInput* reduceinput = nullptr;
     };
 
