@@ -18,13 +18,14 @@ namespace lmr
     class Reducer
     {
     public:
-        virtual void Reduce(const string& key, const string& value) = 0;
+        virtual void init() {}
+        virtual void Reduce(const string& key, ReduceInput* reduceInput) = 0;
         virtual ~Reducer(){}
 
-        void set_reduceinput(ReduceInput* _reduceinput) { reduceinput = _reduceinput; }
-        void set_outputfile(const string& _outputfile) { outputfile = _outputfile; }
-        void set_nummapper(int _num) { num_mapper = _num; }
-        string key_, value_;
+        void set_reduceinput(ReduceInput* _reduceinput) { reduceinput_ = _reduceinput; }
+        void set_hashfunc(HashFunction _hashfunc) { hashfunc_ = _hashfunc; }
+        void set_outputfile(const string& _outputfile) { outputfile_ = _outputfile; }
+        void set_nummapper(int _num) { num_mapper_ = _num; }
 
         void reducework();
         void output(string key, string value);
@@ -33,11 +34,11 @@ namespace lmr
         //void emit(string key, string value);
 
     private:
-        HashFunction hashfunc = JSHash;
-        int num_mapper = 0;
-        string outputfile;
-        ofstream out;
-        ReduceInput* reduceinput = nullptr;
+        HashFunction hashfunc_ = JSHash;
+        int num_mapper_ = 0;
+        string outputfile_;
+        ofstream out_;
+        ReduceInput* reduceinput_ = nullptr;
     };
 
     BASE_CLASS_REGISTER(Reducer)

@@ -2,52 +2,62 @@
 
 namespace lmr
 {
-    void ReduceInput::Add_file(std::string filename){
-        int index = fs.size();
-        fs.push_back(ifstream());
-        fs[index].open(filename);
-        while (fs[index].good()){
+    void ReduceInput::add_file(std::string filename){
+        int index = fs_.size();
+        fs_.push_back(ifstream());
+        fs_[index].open(filename);
+        while (fs_[index].good()){
             string line, key, value;
-            getline(fs[index], line);
+            getline(fs_[index], line);
             if (line.back() == '\r')
                 line.pop_back();
             if (!line.empty()){
-                // parse line in input
-                pq.push(parse_line(line, index));
+                pq_.push(parse_line(line, index));
                 return;
             }
         }
 
-        fs[index].close();
+        fs_[index].close();
         return;
     }
 
+    bool ReduceInput::get_next_key(string &key) {
+        if (pq_.empty()){
+            return false;
+        } else {
+            key  = key_ = get<0>(pq_.top());
+            return true;
+        }
+    }
 
-    bool ReduceInput::Get_next(string &key, string &value)
+    bool ReduceInput::get_next_value(string &value)
     {
-        if (pq.empty()){
+        if (pq_.empty()){
             return false;
         }
 
-        int index;
-        auto top = pq.top();
-        pq.pop();
-        key = get<0>(top);
+        auto top = pq_.top();
+        string key = get<0>(top);
+        if (key != key_){
+            return false;
+        }
+
+        pq_.pop();
         value = get<1>(top);
-        index = get<2>(top);
-        while (fs[index].good()){
+        int index = get<2>(top);
+        while (fs_[index].good()){
             string line;
-            getline(fs[index], line);
+            getline(fs_[index], line);
             if (line.back() == '\r')
                 line.pop_back();
             if (!line.empty()){
                 // parse line in input
-                pq.push(parse_line(line, index));
+                pq_.push(parse_line(line, index));
                 return true;
             }
         }
 
-        fs[index].close();
+        fs_[index].close();
         return true;
     }
 

@@ -8,15 +8,13 @@ using namespace std;
 class WordCountReducer : public Reducer
 {
 public:
-    virtual void Reduce(const string& key, const string& value)
+    virtual void Reduce(const string& key, ReduceInput* reduceInput)
     {
-        if (key_ == key){
-            value_ = to_string(stoi(value) + stoi(value_));
-        } else {
-            output(key_, value_);
-            key_ = key;
-            value_ = value;
+        string value, result = "0";
+        while (reduceInput->get_next_value(value)){
+            result = to_string(stoi(value) + stoi(result));
         }
+        output(key, result);
     }
 };
 
@@ -37,7 +35,7 @@ int main()
 
     ReduceInput reduceinput;
     for (auto file:inputfiles){
-        reduceinput.Add_file(file);
+        reduceinput.add_file(file);
     }
 
     reducer->set_reduceinput(&reduceinput);
