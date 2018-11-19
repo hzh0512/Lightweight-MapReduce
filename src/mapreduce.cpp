@@ -14,7 +14,7 @@ namespace lmr
         {
             case netcomm_type::LMR_CHECKIN:
                 pthread_mutex_lock(&mutex);
-                if (++number_checkin == net->gettotalnum())
+                if (++number_checkin == instance->total)
                     instance->isready = true;
                 pthread_mutex_unlock(&mutex);
                 break;
