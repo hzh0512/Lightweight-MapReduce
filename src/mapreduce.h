@@ -1,10 +1,10 @@
 #ifndef LMR_MAPREDUCE_H
 #define LMR_MAPREDUCE_H
 
-#include <ctime>
 #include <unordered_map>
 #include <vector>
 #include <queue>
+#include <chrono>
 #include "libgen.h"
 #include "libssh/libssh.h"
 #include "unistd.h"
@@ -17,6 +17,7 @@
 namespace lmr
 {
     using namespace std;
+    using namespace std::chrono;
 
     enum workertype
     {

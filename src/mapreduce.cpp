@@ -236,10 +236,10 @@ namespace lmr
 
     int MapReduce::work(MapReduceResult& result)
     {
-        clock_t start = clock();
+        time_point<chrono::high_resolution_clock> start = high_resolution_clock::now();
         while (!stopflag)
             sleep_us(1000);
-        result.timeelapsed = ((double)(clock() - start)) / (double)CLOCKS_PER_SEC;
+        result.timeelapsed = duration_cast<duration<double>>(high_resolution_clock::now() - start).count();
         net->wait();
         return 0;
     }
