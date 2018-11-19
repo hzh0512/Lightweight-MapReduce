@@ -69,9 +69,7 @@ namespace lmr
         for (int i = 0; i < spec->num_inputs; ++i)
         {
             sprintf(tmp, input_format.c_str(), i);
-            ifstream f(tmp);
-            if (f)
-                ri.add_file(tmp);
+            ri.add_file(tmp);
         }
 
         char tmp2[1024];
@@ -108,6 +106,7 @@ namespace lmr
         if (finished)
         {
             fprintf(stderr, "ALL WORK DONE!\n");
+            system("rm -rf tmp/");
             stopflag = finished;
         }
     }
@@ -115,12 +114,11 @@ namespace lmr
     void MapReduce::mapper_done(int net_index, const vector<int>& finished_index)
     {
         int job_index = -1;
-        pthread_mutex_lock(&mutex);
         for (int i : finished_index)
-        {
             for (int j = 0; j < spec->num_reducers; ++j)
                 status[i][j] = jobstatus::mapper_done;
-        }
+
+        pthread_mutex_lock(&mutex);
         if (!jobs.empty())
         {
             job_index = jobs.front();
@@ -129,6 +127,7 @@ namespace lmr
         mapper_finished_cnt += finished_index.size();
         if (mapper_finished_cnt == spec->num_inputs) // all the mappers finished.
         {
+            fprintf(stderr, "ALL MAPPER DONE!\n");
             for (int i = 0; i < spec->num_reducers; ++i)
                 net->send(reducer_net_index(i), netcomm_type::LMR_ASSIGN_REDUCER,
                         form_assign_reducer(string("tmp/tmp_%d_") + to_string(i) +".txt"));
@@ -139,7 +138,7 @@ namespace lmr
             net->send(net_index, netcomm_type::LMR_CLOSE, nullptr, 0);
         else
             net->send(net_index, netcomm_type::LMR_ASSIGN_MAPPER,
-                      form_assign_mapper("tmp/tmp_%d_%d.txt", {jobs.front()}));
+                      form_assign_mapper("tmp/tmp_%d_%d.txt", {job_index}));
     }
 
     void MapReduce::assign_mapper(const string& output_format, const vector<int>& input_index)
@@ -171,10 +170,11 @@ namespace lmr
         instance = this;
         index = _index;
         spec = _spec;
+        setbuf(stdout, nullptr);
         net = new netcomm(_spec->config_file, _index, cb);
-        total = net->gettotalnum();
+        total = spec->num_mappers + spec->num_reducers + 1;
 
-        if (spec->num_mappers + spec->num_reducers + 1 > total)
+        if (total > net->gettotalnum())
         {
             fprintf(stderr, "Too many mappers and reducers. Please add workers in configuration file.\n");
             exit(1);
@@ -204,8 +204,8 @@ namespace lmr
             }
             for (int i = 0; i < spec->num_inputs; ++i)
                 jobs.push(i);
-            status.resize(min(spec->num_mappers, spec->num_inputs));
-            for (int i = 0; i < min(spec->num_mappers, spec->num_inputs); ++i)
+            status.resize(spec->num_inputs);
+            for (int i = 0; i < spec->num_inputs; ++i)
                 status[i].resize(spec->num_reducers);
             system("rm -rf tmp/ && mkdir tmp");
 
@@ -239,7 +239,7 @@ namespace lmr
         clock_t start = clock();
         while (!stopflag)
             sleep_us(1000);
-        result.timeelapsed = ((double)(clock() - start)) / CLOCKS_PER_SEC;
+        result.timeelapsed = ((double)(clock() - start)) / (double)CLOCKS_PER_SEC;
         net->wait();
         return 0;
     }
@@ -310,8 +310,8 @@ namespace lmr
             string cmd = "cd " + cwd + " && mkdir -p output";
             for (auto &p2 : p.second)
             {
-                cmd += " && (./" + spec->program_file + " " + to_string(p2.first) +
-                       " &> output/output" + to_string(p2.first) + ".txt &)";
+                cmd += " && (nohup ./" + spec->program_file + " " + to_string(p2.first) +
+                       " >& output/output" + to_string(p2.first) + ".txt &)";
             }
             if (p.first == "127.0.0.1")
                 system(cmd.c_str());

@@ -37,6 +37,11 @@ namespace lmr
             char *data = new char[len];
             bufferevent_read(bev, data, len);
 
+            // network comm debug
+//            fprintf(stderr, "%d %d\n", ((header*)data)->type, len - 16);
+//            if (len - 16 > 0)
+//                fprintf(stderr, "%s\n", data + sizeof(header));
+
             if (h.type == netcomm_type::LMR_HELLO)
             {
                 int remote_index = h.src;
@@ -80,6 +85,8 @@ namespace lmr
             net->net_um.erase(bev);
             net->net_buffer[remote_index] = nullptr;
             bufferevent_free(bev);
+            if (remote_index == 0)
+                exit(0);
         }else if (events & BEV_EVENT_ERROR) {
             fprintf(stderr, "Got an error %s, connection to %d closed.\n",
                     evutil_socket_error_to_string(EVUTIL_SOCKET_ERROR()), remote_index);

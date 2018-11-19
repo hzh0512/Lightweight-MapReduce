@@ -30,9 +30,6 @@ namespace lmr
         void reducework();
         void output(string key, string value);
 
-    protected:
-        //void emit(string key, string value);
-
     private:
         HashFunction hashfunc_ = JSHash;
         int num_mapper_ = 0;
