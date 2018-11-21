@@ -1,5 +1,4 @@
 #include "../src/mapreduce.h"
-#include <map>
 
 using namespace lmr;
 using namespace std;

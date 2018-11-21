@@ -4,10 +4,6 @@ namespace lmr
 {
     bool MapInput::get_next(string &key, string &value)
     {
-        if (format != "text")
-            return false;
-
-        key = to_string(line_index++);
         while (true)
         {
             while (!f.good())
@@ -23,7 +19,10 @@ namespace lmr
                 if (value.back() == '\r')
                     value.pop_back();
                 if (!value.empty())
+                {
+                    key = files[file_index] + "_" + to_string(line_index++);
                     return true;
+                }
             }
         }
     }

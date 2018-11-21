@@ -22,3 +22,6 @@ target_link_libraries(mapreduce_hello_test ${LIBS})
 
 add_executable(mapreduce_test mapreduce_test.cpp)
 target_link_libraries(mapreduce_test ${LIBS})
+
+add_executable(naivebayes_test naivebayes_test.cpp)
+target_link_libraries(naivebayes_test ${LIBS})
