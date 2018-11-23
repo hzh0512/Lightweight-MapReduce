@@ -4,7 +4,7 @@ namespace lmr
 {
     MapReduce* instance = nullptr;
     pthread_mutex_t mutex;
-    int number_checkin = 0;
+    int number_checkin = 0, real_total = 0;
 
     void cb(header* h, char* data, netcomm* net)
     {
@@ -15,7 +15,7 @@ namespace lmr
             case netcomm_type::LMR_CHECKIN:
                 pthread_mutex_lock(&mutex);
                 ++number_checkin;
-                if (number_checkin % (instance->total - 1) == 0)
+                if (number_checkin % (real_total - 1) == 0)
                     instance->isready = true;
                 pthread_mutex_unlock(&mutex);
                 break;
@@ -171,25 +171,26 @@ namespace lmr
     {
         if (!_spec) return;
         spec = _spec;
+
+        total = spec->num_mappers + spec->num_reducers + 1;
         if (firstrun)
         {
+            real_total = total;
             index = spec->index;
-            total = spec->num_mappers + spec->num_reducers + 1;
-
             if (!net)
-                net = new netcomm(spec->config_file, index, cb);
+                net = new netcomm(spec->config_file, spec->index, cb);
+        }
 
-            if (total > net->gettotalnum())
-            {
-                fprintf(stderr, "Too many mappers and reducers. Please add workers in configuration file.\n");
-                exit(1);
-            }
+        if (total > net->gettotalnum())
+        {
+            fprintf(stderr, "Too many mappers and reducers. Please add workers in configuration file.\n");
+            exit(1);
+        }
 
-            if (spec->num_mappers < 1 || spec->num_reducers < 1)
-            {
-                fprintf(stderr, "Number of both mappers and reducers must be at least one.\n");
-                exit(1);
-            }
+        if (spec->num_mappers < 1 || spec->num_reducers < 1)
+        {
+            fprintf(stderr, "Number of both mappers and reducers must be at least one.\n");
+            exit(1);
         }
     }
 
@@ -225,6 +226,9 @@ namespace lmr
             while (!isready)
                 sleep_us(1000);
             isready = false;
+
+            for (int i = total; i < real_total; ++i)
+                net->send(i, netcomm_type::LMR_CLOSE, nullptr, 0);
 
             pthread_mutex_lock(&mutex); // protect jobs queue
             for (int i = 0; i < spec->num_mappers; ++i)
@@ -330,7 +334,7 @@ namespace lmr
             for (auto &p2 : p.second)
             {
                 cmd += " && (./" + spec->program_file + " " + to_string(p2.first) +
-                       " >& output/output" + to_string(p2.first) + ".txt &)";
+                       " >& output/output_" + to_string(p2.first) + ".txt &)";
             }
             if (p.first == "127.0.0.1")
                 system(cmd.c_str());

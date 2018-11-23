@@ -21,6 +21,7 @@ namespace lmr
         virtual void init() {}
         virtual void Reduce(const string& key, ReduceInput* reduceInput) = 0;
         virtual ~Reducer(){}
+        virtual void combine() {}
 
         void set_reduceinput(ReduceInput* _reduceinput) { reduceinput_ = _reduceinput; }
         void set_hashfunc(HashFunction _hashfunc) { hashfunc_ = _hashfunc; }

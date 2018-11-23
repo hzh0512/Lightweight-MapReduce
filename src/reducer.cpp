@@ -15,6 +15,7 @@ namespace lmr
         init();
         while (reduceinput_->get_next_key(key))
             (Reduce(key, reduceinput_));
+        combine();
         out_.close();
     }
 

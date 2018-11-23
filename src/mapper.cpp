@@ -11,7 +11,10 @@ namespace lmr
 
     void Mapper::emit(string key, string value)
     {
-        out[hashfunc(key) % num_reducer].insert(make_pair(key, value));
+        if (num_reducer == 1)
+            out[0].insert(make_pair(key, value));
+        else
+            out[hashfunc(key) % num_reducer].insert(make_pair(key, value));
     }
 
     void Mapper::mapwork()

@@ -2,7 +2,7 @@
 #define LMR_NAIVEBAYES_H
 
 #include "../mapreduce.h"
-
+#include <cmath>
 
 namespace lmr
 {
@@ -24,7 +24,6 @@ namespace lmr
             int index;
             MapReduce* mr;
             MapReduceSpecification* spec;
-            string trainingformat = "lmr_nb_tmp/train_%d.txt";
         };
     }
 }
