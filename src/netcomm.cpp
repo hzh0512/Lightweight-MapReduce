@@ -132,14 +132,12 @@ namespace lmr
 
     netcomm::~netcomm()
     {
-        for (int i = 0; i < net_buffer.size(); ++i)
-        {
-            if (net_buffer[i]) {
+        for (int i = 0; i < net_buffer.size(); ++i) {
+            if (net_buffer[i])
                 bufferevent_free(net_buffer[i]);
-            }
         }
         evconnlistener_free(listener);
-        event_base_loopexit(net_base, NULL);
+        event_base_loopexit(net_base, nullptr);
         event_base_free(net_base);
     }
 
@@ -223,7 +221,7 @@ namespace lmr
         ifstream f(configfile);
         uint16_t port;
         string ip;
-        getline(f, ip);  // user:password on first line
+        getline(f, ip);  // user:BASE64(password) on first line
         while (f >> ip >> port)
         {
             if (inet_addr(ip.c_str()) == INADDR_NONE)

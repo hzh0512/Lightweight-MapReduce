@@ -8,7 +8,6 @@ int main()
 {
     MapInput mi;
     string key, value;
-    mi.set_format("text");
     mi.add_file("a.txt");
     mi.add_file("b.txt");
     mi.add_file("c.txt");

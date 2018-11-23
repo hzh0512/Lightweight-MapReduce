@@ -7,6 +7,7 @@ using namespace std;
 
 int main(int argc, char **argv)
 {
+    MapReduce mr;
     MapReduceSpecification spec;
     MapReduceResult result;
     char *program_file = basename(argv[0]);
@@ -16,15 +17,18 @@ int main(int argc, char **argv)
     spec.config_file = "config.txt";
     spec.index = index;
 
-    spec.output_format = "output/result_%d.txt";
-
     spec.num_mappers = 1;
     spec.num_reducers = 2;
 
-    ml::naivebayes nb(&spec, index);
-    nb.train("input_%d.txt", 2, result);
+    mr.set_spec(&spec);
+    ml::naivebayes nb(&mr);
 
-    printf("%.3fs elapsed.\n", result.timeelapsed);
+    nb.train("input_%d.txt", 2, result);
+    fprintf(stderr, "%.3fs elapsed.\n", result.timeelapsed);
+
+    fprintf(stderr, "***Predicing.***\n");
+    nb.predict("test_%d.txt", 2, "output/result_%d.txt", result);
+    fprintf(stderr, "%.3fs elapsed.\n", result.timeelapsed);
 
     return 0;
 }

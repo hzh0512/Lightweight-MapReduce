@@ -14,7 +14,7 @@ int main(int argc, char **argv)
     spec.config_file = "config.txt";
     spec.index = index;
 
-    MapReduce mr(&spec, index);
+    MapReduce mr(&spec);
     mr.work(result);
 
     return 0;

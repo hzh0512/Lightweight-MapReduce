@@ -64,7 +64,7 @@ int main(int argc, char **argv)
     spec.reducer_class = "WordCountReducer";
     spec.num_reducers = 2;
 
-    MapReduce mr(&spec, index);
+    MapReduce mr(&spec);
     mr.work(result);
     printf("%.3fs elapsed.\n", result.timeelapsed);
 

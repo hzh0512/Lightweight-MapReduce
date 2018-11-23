@@ -19,16 +19,6 @@ namespace lmr
     using namespace std;
     using namespace std::chrono;
 
-    enum workertype
-    {
-        master, worker, mapper, reducer
-    };
-
-    enum jobstatus
-    {
-        nonexist, mapper_done, reducer_done
-    };
-
     typedef struct
     {
         double timeelapsed;
@@ -38,12 +28,15 @@ namespace lmr
     {
         friend void cb(header* h, char* data, netcomm* net);
     public:
-        MapReduce(MapReduceSpecification* _spec, int _index = 0);
+        MapReduce(MapReduceSpecification* _spec = nullptr);
         ~MapReduce();
+        void set_spec(MapReduceSpecification* _spec);
         int work(MapReduceResult& result);
+        MapReduceSpecification* get_spec() { return spec; }
 
     private:
         bool dist_run_files();
+        void start_work();
         inline int net_mapper_index(int i);
         inline int net_reducer_index(int i);
         inline int mapper_net_index(int i);
@@ -54,12 +47,10 @@ namespace lmr
         void assign_reducer(const string& input_format);
         void reducer_done(int net_index);
 
-        bool stopflag = false, isready = false;
+        bool stopflag = false, isready = false, firstrun = true;
         int index, total, mapper_finished_cnt = 0, reducer_finished_cnt = 0;
         MapReduceSpecification* spec = nullptr;
-        workertype type;
         netcomm *net = nullptr;
-        vector<vector<jobstatus>> status;
         queue<int> jobs;
     };
 }

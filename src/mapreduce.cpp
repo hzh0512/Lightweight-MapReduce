@@ -4,7 +4,7 @@ namespace lmr
 {
     MapReduce* instance = nullptr;
     pthread_mutex_t mutex;
-    int number_checkin = 1;
+    int number_checkin = 0;
 
     void cb(header* h, char* data, netcomm* net)
     {
@@ -14,7 +14,8 @@ namespace lmr
         {
             case netcomm_type::LMR_CHECKIN:
                 pthread_mutex_lock(&mutex);
-                if (++number_checkin == instance->total)
+                ++number_checkin;
+                if (number_checkin % (instance->total - 1) == 0)
                     instance->isready = true;
                 pthread_mutex_unlock(&mutex);
                 break;
@@ -90,15 +91,11 @@ namespace lmr
 
     void MapReduce::reducer_done(int net_index)
     {
-        int redece_index = net_reducer_index(net_index);
         bool finished = false;
 
         net->send(net_index, netcomm_type::LMR_CLOSE, nullptr, 0);
 
         pthread_mutex_lock(&mutex);
-        for (int i = 0; i < status.size(); ++i)
-            status[i][redece_index] = jobstatus::reducer_done;
-
         if (++reducer_finished_cnt == spec->num_reducers)
             finished = true;
         pthread_mutex_unlock(&mutex);
@@ -107,16 +104,13 @@ namespace lmr
         {
             fprintf(stderr, "ALL WORK DONE!\n");
             system("rm -rf tmp/");
-            stopflag = finished;
+            stopflag = true;
         }
     }
 
     void MapReduce::mapper_done(int net_index, const vector<int>& finished_index)
     {
         int job_index = -1;
-        for (int i : finished_index)
-            for (int j = 0; j < spec->num_reducers; ++j)
-                status[i][j] = jobstatus::mapper_done;
 
         pthread_mutex_lock(&mutex);
         if (!jobs.empty())
@@ -165,52 +159,72 @@ namespace lmr
         delete[] tmp;
     }
 
-    MapReduce::MapReduce(MapReduceSpecification* _spec, int _index)
+    MapReduce::MapReduce(MapReduceSpecification* _spec)
     {
         instance = this;
-        index = _index;
-        spec = _spec;
         setbuf(stdout, nullptr);
-        net = new netcomm(_spec->config_file, _index, cb);
-        total = spec->num_mappers + spec->num_reducers + 1;
+        pthread_mutex_init(&mutex, nullptr);
+        set_spec(_spec);
+    }
 
-        if (total > net->gettotalnum())
+    void MapReduce::set_spec(MapReduceSpecification *_spec)
+    {
+        if (!_spec) return;
+        spec = _spec;
+        if (firstrun)
         {
-            fprintf(stderr, "Too many mappers and reducers. Please add workers in configuration file.\n");
+            index = spec->index;
+            total = spec->num_mappers + spec->num_reducers + 1;
+
+            if (!net)
+                net = new netcomm(spec->config_file, index, cb);
+
+            if (total > net->gettotalnum())
+            {
+                fprintf(stderr, "Too many mappers and reducers. Please add workers in configuration file.\n");
+                exit(1);
+            }
+
+            if (spec->num_mappers < 1 || spec->num_reducers < 1)
+            {
+                fprintf(stderr, "Number of both mappers and reducers must be at least one.\n");
+                exit(1);
+            }
+        }
+    }
+
+    void MapReduce::start_work()
+    {
+        if (!spec)
+        {
+            fprintf(stderr, "No specification.\n");
             exit(1);
         }
 
-        if (spec->num_mappers < 1 || spec->num_reducers < 1)
-        {
-            fprintf(stderr, "Number of both mappers and reducers must be at least one.\n");
-            exit(1);
-        }
+        reducer_finished_cnt = mapper_finished_cnt = 0;
 
-        if (_index > 0)
+        if (index > 0)
         {
-            type = workertype::worker;
+            firstrun = false;
             net->send(0, netcomm_type::LMR_CHECKIN, nullptr, 0);
-            isready = true;
         }
         else
         {
-            type = workertype::master;
-            pthread_mutex_init(&mutex, nullptr);
-            if (!dist_run_files())
+            if (firstrun && !dist_run_files())
             {
                 fprintf(stderr, "distribution error. cannot run workers.\n");
                 net->wait();
                 exit(1);
             }
+            firstrun = false;
+
             for (int i = 0; i < spec->num_inputs; ++i)
                 jobs.push(i);
-            status.resize(spec->num_inputs);
-            for (int i = 0; i < spec->num_inputs; ++i)
-                status[i].resize(spec->num_reducers);
             system("rm -rf tmp/ && mkdir tmp");
 
             while (!isready)
                 sleep_us(1000);
+            isready = false;
 
             pthread_mutex_lock(&mutex); // protect jobs queue
             for (int i = 0; i < spec->num_mappers; ++i)
@@ -230,17 +244,22 @@ namespace lmr
 
     MapReduce::~MapReduce()
     {
-        delete net;
-        if (index == 0) pthread_mutex_destroy(&mutex);
+        if (net)
+        {
+            net->wait();
+            delete net;
+        }
+        pthread_mutex_destroy(&mutex);
     }
 
     int MapReduce::work(MapReduceResult& result)
     {
         time_point<chrono::high_resolution_clock> start = high_resolution_clock::now();
+        start_work();
         while (!stopflag)
             sleep_us(1000);
+        stopflag = false;
         result.timeelapsed = duration_cast<duration<double>>(high_resolution_clock::now() - start).count();
-        net->wait();
         return 0;
     }
 
@@ -310,7 +329,7 @@ namespace lmr
             string cmd = "cd " + cwd + " && mkdir -p output";
             for (auto &p2 : p.second)
             {
-                cmd += " && (nohup ./" + spec->program_file + " " + to_string(p2.first) +
+                cmd += " && (./" + spec->program_file + " " + to_string(p2.first) +
                        " >& output/output" + to_string(p2.first) + ".txt &)";
             }
             if (p.first == "127.0.0.1")
