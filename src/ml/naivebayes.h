@@ -17,7 +17,7 @@ namespace lmr
             naivebayes(MapReduce* _mr):mr(_mr) { spec = _mr->get_spec(); index = spec->index; }
             void set_formatfunc(FormatFunc _func) {func = _func;}
             void train(const string& input, int num_input, MapReduceResult& result);
-            void predict(const string& input, int num_input, const string& output, MapReduceResult& result);
+            void predict(const string& input, int num_input, const string& output, MapReduceResult& result, bool keep_training = false);
 
             static FormatFunc func;
         private:

@@ -299,7 +299,7 @@ namespace lmr
             result.timeelapsed = time;
         }
 
-        void naivebayes::predict(const string& input, int num_input, const string& output, MapReduceResult& result)
+        void naivebayes::predict(const string& input, int num_input, const string& output, MapReduceResult& result, bool keep_training)
         {
             double time = 0.f;
             spec->mapper_class = "NB_Test_Mapper1";
@@ -342,7 +342,7 @@ namespace lmr
             mr->work(result);
             time += result.timeelapsed;
 
-            if (index == 0)
+            if (index == 0 && !keep_training)
                 system(("rm -rf " + NB_tmpdir).c_str());
             result.timeelapsed = time;
         }

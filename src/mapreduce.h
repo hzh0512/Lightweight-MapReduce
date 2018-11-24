@@ -5,6 +5,7 @@
 #include <vector>
 #include <queue>
 #include <chrono>
+#include <termios.h>
 #include "libgen.h"
 #include "libssh/libssh.h"
 #include "unistd.h"

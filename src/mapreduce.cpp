@@ -288,7 +288,7 @@ namespace lmr
             rc = ssh_userauth_password(my_ssh_session, nullptr, password.c_str());
         if (rc != SSH_AUTH_SUCCESS)
         {
-            fprintf(stderr, "Error authenticating with password: %s\n", ssh_get_error(my_ssh_session));
+            fprintf(stderr, "Authentication failure.\n");
             ssh_disconnect(my_ssh_session);
             ssh_free(my_ssh_session);
             return false;
@@ -306,6 +306,29 @@ namespace lmr
         return true;
     }
 
+    int getch()
+    {
+        struct termios oldattr, newattr;
+        int ch;
+        tcgetattr(STDIN_FILENO, &oldattr);
+        newattr = oldattr;
+        newattr.c_lflag &= ~(ICANON | ECHO);
+        tcsetattr(STDIN_FILENO, TCSANOW, &newattr);
+        ch = getchar();
+        tcsetattr(STDIN_FILENO, TCSANOW, &oldattr);
+        return ch;
+    }
+
+    void getpass(string& pass)
+    {
+        char c;
+        pass.clear();
+        printf("please input your password: ");
+        while ((c = getch()) != '\n')
+            pass.push_back(c);
+        putchar('\n');
+    }
+
     bool MapReduce::dist_run_files()
     {
         // get cwd
@@ -321,7 +344,10 @@ namespace lmr
         password = temp.substr(pos + 1);
         if (!password.empty() && password.back() == '\r')
             password.pop_back();
-        password = base64_decode(password);
+        if (password == "*")
+            getpass(password);
+        else
+            password = base64_decode(password);
 
         // run workers
         unordered_map<string, vector<pair<int,int>>> um;
