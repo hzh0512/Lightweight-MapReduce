@@ -48,7 +48,7 @@ namespace lmr
         void assign_reducer(const string& input_format);
         void reducer_done(int net_index);
 
-        bool stopflag = false, isready = false, firstrun = true;
+        bool stopflag = false, isready = false, firstrun = true, firstspec = true;
         int index, total, mapper_finished_cnt = 0, reducer_finished_cnt = 0;
         MapReduceSpecification* spec = nullptr;
         netcomm *net = nullptr;

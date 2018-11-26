@@ -4,7 +4,7 @@ namespace lmr
 {
     MapReduce* instance = nullptr;
     pthread_mutex_t mutex;
-    int number_checkin = 0, real_total = 0;
+    int number_checkin = 0, real_total = -1;
 
     void cb(header* h, char* data, netcomm* net)
     {
@@ -173,12 +173,12 @@ namespace lmr
         spec = _spec;
 
         total = spec->num_mappers + spec->num_reducers + 1;
-        if (firstrun)
+        if (firstspec)
         {
+            firstspec = false;
             real_total = total;
             index = spec->index;
-            if (!net)
-                net = new netcomm(spec->config_file, spec->index, cb);
+            net = new netcomm(spec->config_file, spec->index, cb);
         }
 
         if (total > net->gettotalnum())
@@ -351,7 +351,7 @@ namespace lmr
 
         // run workers
         unordered_map<string, vector<pair<int,int>>> um;
-        for (int i = 1; i < total; ++i)
+        for (int i = 1; i < real_total; ++i)
             um[net->endpoints[i].first].push_back(make_pair(i, net->endpoints[i].second));
 
         for (auto &p : um)

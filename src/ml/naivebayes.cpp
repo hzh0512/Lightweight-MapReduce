@@ -9,30 +9,14 @@ namespace lmr
                NB_trainingformat2 = NB_tmpdir + "train2.txt",
                NB_testingformat = NB_tmpdir + "test_%d.txt";
 
-        void string_to_vector(const string& s, size_t left, size_t right, const char c, vector<string>& res)
-        {
-            size_t index = left, temp = left;
-            res.clear();
-            while (true)
-            {
-                while (index < right && s[index] != c) index++;
-                if (index == right) break;
-                if (index > temp)
-                    res.push_back(s.substr(temp, index - temp));
-                temp = ++index;
-            }
-            if (temp < right)
-                res.push_back(s.substr(temp, right - temp));
-        }
-
-        void default_NB_formatfunc(const string &input, vector<string> &y, vector<string> &x)
+        inline void default_NB_formatfunc(const string &input, vector<string> &y, vector<string> &x)
         {
             size_t index1 = input.find('\t'), index2 = input.find('\t', index1 + 1);
             string_to_vector(input, index1 + 1, index2, ',', y);
             string_to_vector(input, index2 + 1, input.size(), ' ', x);
         }
 
-        FormatFunc naivebayes::func = default_NB_formatfunc;
+        xy_FormatFunc naivebayes::func = default_NB_formatfunc;
 
         class NB_Train_Mapper1 : public Mapper
         {

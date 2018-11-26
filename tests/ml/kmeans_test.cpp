@@ -1,5 +1,5 @@
-#include "../src/mapreduce.h"
-#include "../src/ml/naivebayes.h"
+#include "../../src/mapreduce.h"
+#include "../../src/ml/kmeans.h"
 
 using namespace lmr;
 using namespace std;
@@ -18,15 +18,18 @@ int main(int argc, char **argv)
     spec.num_reducers = 5;
     mr.set_spec(&spec);
 
-    ml::naivebayes nb(&mr);
+    split_file_ascii("kmeans/USCensus1990.full.txt", "kmeans/input_%d.txt", 5);
+
+    ml::kmeans km(&mr);
 
     printf("***Training.***\n");
-    nb.train("input_%d.txt", 2, result);
+    km.train("kmeans/input_%d.txt", 5, "kmeans/centroids.txt", 0.01, 20, result);
     printf("%.3fs elapsed.\n", result.timeelapsed);
 
     printf("***Predicing.***\n");
-    nb.predict("test_%d.txt", 2, "output/result_%d.txt", result);
+    km.predict("kmeans/input_%d.txt", 5, "output/result_%d.txt", result);
     printf("%.3fs elapsed.\n", result.timeelapsed);
 
     return 0;
 }
+

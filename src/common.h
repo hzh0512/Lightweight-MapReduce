@@ -4,6 +4,9 @@
 #include <ctime>
 #include <string>
 #include <cctype>
+#include <vector>
+#include <cmath>
+#include <fstream>
 
 using namespace std;
 
@@ -14,6 +17,74 @@ inline void sleep_us(int useconds)
     ts.tv_nsec = 1000 * (useconds % 1000000);
     nanosleep(&ts, nullptr);
 }
+
+inline void string_to_vector(const string& s, size_t left, size_t right, const char c, vector<string>& res)
+{
+    size_t index = left, temp = left;
+    res.clear();
+    while (true)
+    {
+        while (index < right && s[index] != c) index++;
+        if (index == right) break;
+        if (index > temp)
+            res.push_back(s.substr(temp, index - temp));
+        temp = ++index;
+    }
+    if (temp < right)
+        res.push_back(s.substr(temp, right - temp));
+}
+
+inline double l2_distance(const vector<double>& x1, const vector<double>& x2)
+{
+    double sqsum = 0.f;
+    for (int i = 0; i < x1.size(); ++i)
+        sqsum += (x1[i] - x2[i]) * (x1[i] - x2[i]);
+    return sqrt(sqsum);
+}
+
+inline void split_file_ascii(const string& input, const string& output_format, int num)
+{
+    const int buf_size = 4096;
+    char *tmp = new char[output_format.size() + 1024], tmp2[buf_size];
+    ifstream f(input, ios::in | ios::binary);
+    size_t last = 0, total = 0, p = 0, len = 0;
+
+    f.seekg(0, ios_base::end);
+    total = (size_t)f.tellg();
+
+    for (int i = 0; i < num; ++i)
+    {
+        p = (i == num - 1) ? total : total / num * (i + 1);
+        if (i < num - 1)
+        {
+            f.seekg(p, ios_base::beg);
+            while (f.good() && f.get() != '\n') ;
+            f.clear();
+            p = (size_t)f.tellg();
+        }
+        if (p < last)
+        {
+            fprintf(stderr, "input file too short to split.\n");
+            exit(1);
+        }
+        len = p - last;
+        sprintf(tmp, output_format.c_str(), i);
+        ofstream of(tmp, ios::out | ios::binary);
+        f.seekg(last, ios_base::beg);
+        while (len)
+        {
+            int l = len > buf_size ? buf_size : len;
+            f.read(tmp2, l);
+            of.write(tmp2, l);
+            len -= l;
+        }
+        of.close();
+        last = p;
+    }
+
+    delete[] tmp;
+}
+
 
 static const std::string base64_chars =
         "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
