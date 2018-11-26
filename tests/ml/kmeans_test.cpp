@@ -18,12 +18,12 @@ int main(int argc, char **argv)
     spec.num_reducers = 5;
     mr.set_spec(&spec);
 
-    split_file_ascii("kmeans/USCensus1990.full.txt", "kmeans/input_%d.txt", 5);
+    split_file_ascii("kmeans/USCensus1990.full.txt", "kmeans/input_%d.txt", 15);
 
     ml::kmeans km(&mr);
 
     printf("***Training.***\n");
-    km.train("kmeans/input_%d.txt", 5, "kmeans/centroids.txt", 0.01, 20, result);
+    km.train("kmeans/input_%d.txt", 5, "kmeans/centroids.txt", 0.1, 20, result);
     printf("%.3fs elapsed.\n", result.timeelapsed);
 
     printf("***Predicing.***\n");

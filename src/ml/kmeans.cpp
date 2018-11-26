@@ -205,6 +205,7 @@ namespace lmr
         void kmeans::train(const string& input, int num_input, const string& centroids, double eps, int max_iter, MapReduceResult& result)
         {
             vector<vector<double>> c1, c2;
+            double time = 0.f;
             if (index == 0)
             {
                 system(("mkdir -p " + KMeans_tmpdir).c_str());
@@ -220,9 +221,21 @@ namespace lmr
             spec->output_format = KMeans_trainingfile;
 
             mr->set_spec(spec);
-            mr->work(result);
+
+            get_centroids(c1);
+            for (int i = 0; i < max_iter; ++i)
+            {
+                printf("iteration %d\n", i + 1);
+                mr->work(result);
+                time += result.timeelapsed;
+                get_centroids(c2);
+                if (diff_centroids(c1, c2) < eps)
+                    break;
+                c1 = c2;
+            }
 
             spec->num_reducers = tmp;
+            result.timeelapsed = time;
         }
 
         void kmeans::predict(const string& input, int num_input, const string& output, MapReduceResult& result)

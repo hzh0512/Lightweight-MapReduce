@@ -93,8 +93,6 @@ namespace lmr
     {
         bool finished = false;
 
-        net->send(net_index, netcomm_type::LMR_CLOSE, nullptr, 0);
-
         pthread_mutex_lock(&mutex);
         if (++reducer_finished_cnt == spec->num_reducers)
             finished = true;
@@ -103,6 +101,8 @@ namespace lmr
         if (finished)
         {
             fprintf(stderr, "ALL WORK DONE!\n");
+            for (int i = 1; i < real_total; ++i)
+                net->send(i, netcomm_type::LMR_CLOSE, nullptr, 0);
             system("rm -rf tmp/");
             stopflag = true;
         }
@@ -128,9 +128,7 @@ namespace lmr
         }
         pthread_mutex_unlock(&mutex);
 
-        if (job_index < 0)
-            net->send(net_index, netcomm_type::LMR_CLOSE, nullptr, 0);
-        else
+        if (job_index >= 0)
             net->send(net_index, netcomm_type::LMR_ASSIGN_MAPPER,
                       form_assign_mapper("tmp/tmp_%d_%d.txt", {job_index}));
     }
@@ -227,14 +225,11 @@ namespace lmr
                 sleep_us(1000);
             isready = false;
 
-            for (int i = total; i < real_total; ++i)
-                net->send(i, netcomm_type::LMR_CLOSE, nullptr, 0);
-
             pthread_mutex_lock(&mutex); // protect jobs queue
             for (int i = 0; i < spec->num_mappers; ++i)
             {
                 if (jobs.empty())
-                    net->send(mapper_net_index(i), netcomm_type::LMR_CLOSE, nullptr, 0);
+                    break;
                 else
                 {
                     net->send(mapper_net_index(i), netcomm_type::LMR_ASSIGN_MAPPER,
