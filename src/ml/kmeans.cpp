@@ -90,7 +90,8 @@ namespace lmr
                 int min_index = -1;
                 double min_dist = 1e200, dist;
                 for (auto& xi : x) {
-                    v.push_back(stod(xi));
+                    try{ v.push_back(stod(xi)); }
+                    catch (invalid_argument &e){ return; }
                 }
                 for (int i = 0; i < centroids.size(); ++i) {
                     dist = kmeans::distfunc(centroids[i], v);
@@ -171,8 +172,10 @@ namespace lmr
                 vector<double> v;
                 int min_index = -1;
                 double min_dist = 1e200, dist;
-                for (auto& xi : x)
-                    v.push_back(stod(xi));
+                for (auto& xi : x) {
+                    try { v.push_back(stod(xi)); }
+                    catch (invalid_argument &e) { return; }
+                }
                 for (int i = 0; i < centroids.size(); ++i) {
                     dist = kmeans::distfunc(centroids[i], v);
                     if (dist < min_dist) {

@@ -46,6 +46,7 @@ inline double l2_distance(const vector<double>& x1, const vector<double>& x2)
 
 inline void split_file_ascii(const string& input, const string& output_format, int num)
 {
+    bool file_exists = true;
     const int buf_size = 4096;
     char *tmp = new char[output_format.size() + 1024], tmp2[buf_size];
     ifstream f(input, ios::in | ios::binary);
@@ -57,6 +58,19 @@ inline void split_file_ascii(const string& input, const string& output_format, i
     strcpy(tmp, output_format.c_str());
     dirname(tmp);
     system(("mkdir -p " + string(tmp)).c_str());
+
+    for (int i = 0; i < num; ++i)
+    {
+        sprintf(tmp, output_format.c_str(), i);
+        ifstream ftmp(tmp);
+        if (!ftmp) {
+            file_exists = false;
+            break;
+        }
+    }
+
+    if (file_exists)
+        return;
 
     for (int i = 0; i < num; ++i)
     {
