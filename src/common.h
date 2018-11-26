@@ -7,6 +7,8 @@
 #include <vector>
 #include <cmath>
 #include <fstream>
+#include <cstring>
+#include <libgen.h>
 
 using namespace std;
 
@@ -52,6 +54,10 @@ inline void split_file_ascii(const string& input, const string& output_format, i
     f.seekg(0, ios_base::end);
     total = (size_t)f.tellg();
 
+    strcpy(tmp, output_format.c_str());
+    dirname(tmp);
+    system(("mkdir -p " + string(tmp)).c_str());
+
     for (int i = 0; i < num; ++i)
     {
         p = (i == num - 1) ? total : total / num * (i + 1);
@@ -83,6 +89,7 @@ inline void split_file_ascii(const string& input, const string& output_format, i
     }
 
     delete[] tmp;
+    f.close();
 }
 
 
