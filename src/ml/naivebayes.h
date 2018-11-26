@@ -14,16 +14,18 @@ namespace lmr
         class naivebayes
         {
         public:
-            naivebayes(MapReduce* _mr):mr(_mr) { spec = _mr->get_spec(); index = spec->index; }
+            naivebayes(MapReduce* _mr, bool _keep_training = false);
+            ~naivebayes();
             void set_formatfunc(FormatFunc _func) {func = _func;}
             void train(const string& input, int num_input, MapReduceResult& result);
-            void predict(const string& input, int num_input, const string& output, MapReduceResult& result, bool keep_training = false);
+            void predict(const string& input, int num_input, const string& output, MapReduceResult& result);
 
             static FormatFunc func;
         private:
             int index;
             MapReduce* mr;
             MapReduceSpecification* spec;
+            bool keep_training;
         };
     }
 }
