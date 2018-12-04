@@ -56,7 +56,7 @@ inline void split_file_ascii(const string& input, const string& output_format, i
     total = (size_t)f.tellg();
 
     strcpy(tmp, output_format.c_str());
-    dirname(tmp);
+    tmp = dirname(tmp);
     system(("mkdir -p " + string(tmp)).c_str());
 
     for (int i = 0; i < num; ++i)

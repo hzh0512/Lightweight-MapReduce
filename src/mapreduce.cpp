@@ -194,6 +194,7 @@ namespace lmr
 
     void MapReduce::start_work()
     {
+        printf("Start word from %d.\n", index);
         if (!spec)
         {
             fprintf(stderr, "No specification.\n");
@@ -204,11 +205,13 @@ namespace lmr
 
         if (index > 0)
         {
+            printf("Checkin in %d.\n", index);
             firstrun = false;
             net->send(0, netcomm_type::LMR_CHECKIN, nullptr, 0);
         }
         else
         {
+            printf("Wait for checkin in %d.\n", index);
             if (firstrun && !dist_run_files())
             {
                 fprintf(stderr, "distribution error. cannot run workers.\n");
@@ -225,6 +228,7 @@ namespace lmr
                 sleep_us(1000);
             isready = false;
 
+            printf("All checked in.\n");
             pthread_mutex_lock(&mutex); // protect jobs queue
             for (int i = 0; i < spec->num_mappers; ++i)
             {

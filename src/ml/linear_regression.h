@@ -1,11 +1,9 @@
-//
-// Created by Shiming Zhuang on 12/2/18.
-//
-
 #ifndef LMR_LINEAR_REGRESSION_H
 #define LMR_LINEAR_REGRESSION_H
 
 #include "../mapreduce.h"
+#include <fstream>
+#include <stdio.h>
 
 namespace lmr{
     namespace ml{
@@ -14,7 +12,7 @@ namespace lmr{
         class LinearRegression{
         public:
             LinearRegression(MapReduce *_mr);
-            void compute(const string& input, int num_input, const string& beta, MapReduceResult& result);
+            void compute(const string& input, const string& beta, const string &testfile, MapReduceResult& result);
 
         private:
             MapReduce* mr;
