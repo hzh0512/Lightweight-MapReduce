@@ -1,3 +1,3 @@
 cmake_minimum_required(VERSION 2.8)
 
-add_library(lmr netcomm.cpp netcomm.h common.h register.h mapper.h mapper.cpp mapinput.h mapinput.cpp spec.h hash.h hash.cpp mapreduce.h mapreduce.cpp reducer.h reducer.cpp reduceinput.h reduceinput.cpp netpacket.h ml/naivebayes.cpp ml/naivebayes.h ml/kmeans.cpp ml/kmeans.h)
+add_library(lmr netcomm.cpp netcomm.h common.h register.h mapper.h mapper.cpp mapinput.h mapinput.cpp spec.h hash.h hash.cpp mapreduce.h mapreduce.cpp reducer.h reducer.cpp reduceinput.h reduceinput.cpp netpacket.h ml/naivebayes.cpp ml/naivebayes.h ml/kmeans.cpp ml/kmeans.h ml/linear_regression.h ml/linear_regression.cpp)

@@ -28,3 +28,6 @@ target_link_libraries(naivebayes_test ${LIBS})
 
 add_executable(kmeans_test ml/kmeans_test.cpp)
 target_link_libraries(kmeans_test ${LIBS})
+
+add_executable(linearregression_test ml/linearregression_test.cpp)
+target_link_libraries(linearregression_test ${LIBS})
