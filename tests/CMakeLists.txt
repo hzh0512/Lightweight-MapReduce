@@ -31,3 +31,6 @@ target_link_libraries(kmeans_test ${LIBS})
 
 add_executable(linearregression_test ml/linearregression_test.cpp)
 target_link_libraries(linearregression_test ${LIBS})
+
+add_executable(logisticregression_test ml/logisticregression_test.cpp)
+target_link_libraries(logisticregression_test ${LIBS})

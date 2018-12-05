@@ -7,19 +7,6 @@ namespace lmr
     {
         string LR_tmpdir = "lmr_lr_tmp/", LR_datafile = LR_tmpdir + "data.txt";
 
-        vector<string> string_split(const string &s, char delimiter)
-        {
-            vector<std::string> tokens;
-            string token;
-            istringstream tokenStream(s);
-            while (getline(tokenStream, token, delimiter))
-            {
-                tokens.push_back(token);
-            }
-            printf("\n");
-            return tokens;
-        }
-
         vector<float> gaussin(vector<vector<float> > a, vector<float> b, int n)
         {
             for (int i = 0; i < n; i++) {

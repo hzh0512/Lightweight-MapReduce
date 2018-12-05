@@ -9,6 +9,7 @@
 #include <fstream>
 #include <cstring>
 #include <libgen.h>
+#include <sstream>
 
 using namespace std;
 
@@ -104,6 +105,18 @@ inline void split_file_ascii(const string& input, const string& output_format, i
 
     delete[] tmp;
     f.close();
+}
+
+inline vector<string> string_split(const string &s, char delimiter)
+{
+    vector<std::string> tokens;
+    string token;
+    istringstream tokenStream(s);
+    while (getline(tokenStream, token, delimiter))
+    {
+        tokens.push_back(token);
+    }
+    return tokens;
 }
 
 

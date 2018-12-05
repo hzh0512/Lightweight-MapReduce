@@ -1,5 +1,5 @@
 #include "../../src/mapreduce.h"
-#include "../../src/ml/linear_regression.h"
+#include "../../src/ml/logistic_regression.h"
 
 using namespace lmr;
 using namespace std;
@@ -21,13 +21,15 @@ int main(int argc, char **argv)
     mr.set_spec(&spec);
 
     if (spec.index == 0)
-        split_file_ascii("diabetes.tab.txt", "lr/input_%d.txt", num_mappers);
+        split_file_ascii("train.txt", "lr/input_%d.txt", num_mappers);
 
-    ml::LinearRegression lr(&mr);
+    ml::LogisticRegression lr(&mr);
 
     printf("***Computing.***\n");
-    lr.compute("lr/input_%d.txt", "lr/beta.txt", "simple.tab.txt", result);
+    lr.train("lr/input_%d.txt", 1, "lr/theta.txt", 60, result);
     printf("%.3fs elapsed.\n", result.timeelapsed);
+
+    lr.predict("train.txt", "lr/theta.txt", "lr/labels.txt");
     return 0;
 }
 
