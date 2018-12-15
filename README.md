@@ -9,6 +9,53 @@ We implemented a lightweight MapReduce framework using **C++**, and integrated s
 
 The final setting comes down to a cluster configuration file and a **single** binary executable which would *ssh* to other machines and call itself.
 
+## Configuration file
+
+A full configuration file may look like this.
+
+```
+username:*
+192.168.1.100 2112
+192.168.1.101 2113
+192.168.1.102 2113
+192.168.1.102 2114
+```
+
+The first line consists of username and password. There are three ways to assign them.
+
+First, if running on local machine, just put a single colon.
+
+```
+:
+localhost 2112
+127.0.0.1 2113
+```
+
+Second, if running on remote mahcines and with auto-login, put username:base64(password).
+
+```
+username:cGFzc3dvcmQ=
+lab1.batman.com 2112
+lab2.batman.com 2113
+lab3.batman.com 2113
+lab3.batman.com 2114
+```
+
+Third, if wanting the password prompted, put asterisk username:*.
+
+```
+username:*
+192.168.1.100 2112
+192.168.1.101 2113
+192.168.1.102 2113
+192.168.1.102 2114
+```
+
+Each line afterwards contains the ip address and the port number. No two port numbers can be the same on a single machine.
+
+If running on remote machines, the first ip must be the master machine itself for others to connect.
+
+
 ## Example code
 
 ### KMeans
