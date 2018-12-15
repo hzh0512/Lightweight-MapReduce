@@ -19,6 +19,7 @@ namespace lmr
 
     void Mapper::mapwork()
     {
+        auto start = chrono::high_resolution_clock::now();
         string key, value;
         if (!mapinput)
         {
@@ -31,6 +32,7 @@ namespace lmr
         combine();
 
         output();
+        fprintf(stderr, "Map Compute Time: %f.\n", chrono::duration_cast<chrono::duration<double>>(chrono::high_resolution_clock::now() - start).count());
     }
 
     void Mapper::output()
