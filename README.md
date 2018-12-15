@@ -9,13 +9,15 @@ We implemented a lightweight MapReduce framework using **C++**, and integrated s
 
 The final setting comes down to a cluster configuration file and a **single** binary executable which would *ssh* to other machines and call itself.
 
-## build
+## How to build
 
 ```sh
 mkdir build && cd build
 cmake ..
 make
 ```
+
+You will find the test binary files under test/
 
 ## Configuration file
 
