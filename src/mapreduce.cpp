@@ -100,6 +100,7 @@ namespace lmr
 
         if (finished)
         {
+            fprintf(stderr, "Reduce Time: %fs.\n", duration_cast<duration<double>>(high_resolution_clock::now() - time_cnt).count());
             fprintf(stderr, "ALL WORK DONE!\n");
             for (int i = 1; i < real_total; ++i)
                 net->send(i, netcomm_type::LMR_CLOSE, nullptr, 0);
@@ -122,6 +123,8 @@ namespace lmr
         if (mapper_finished_cnt == spec->num_inputs) // all the mappers finished.
         {
             fprintf(stderr, "ALL MAPPER DONE!\n");
+            fprintf(stderr, "Map Time: %fs.\n", duration_cast<duration<double>>(high_resolution_clock::now() - time_cnt).count());
+            time_cnt = high_resolution_clock::now();
             for (int i = 0; i < spec->num_reducers; ++i)
                 net->send(reducer_net_index(i), netcomm_type::LMR_ASSIGN_REDUCER,
                         form_assign_reducer(string("tmp/tmp_%d_") + to_string(i) +".txt"));
@@ -229,6 +232,7 @@ namespace lmr
             isready = false;
 
             printf("All checked in.\n");
+            time_cnt = high_resolution_clock::now();
             pthread_mutex_lock(&mutex); // protect jobs queue
             for (int i = 0; i < spec->num_mappers; ++i)
             {

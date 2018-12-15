@@ -11,7 +11,6 @@ namespace lmr
         {
             ifstream f;
             f.open(thetafile);
-            f.seekg(0);
             theta.resize(dimension);
             string line;
             for (int i = 0; i < dimension; i++){
