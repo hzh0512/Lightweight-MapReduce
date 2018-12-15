@@ -179,6 +179,8 @@ namespace lmr
             output_beta(bt, beta);
 
             compute_test(testfile, bt);
+
+            result.timeelapsed = time;
         }
     }
 }

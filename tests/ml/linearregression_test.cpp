@@ -20,7 +20,6 @@ int main(int argc, char **argv)
     spec.num_reducers = 1;
     mr.set_spec(&spec);
 
-    system("rm -rf lr/");
     if (spec.index == 0)
         split_file_ascii("diabetes.tab.txt", "lr/input_%d.txt", num_mappers);
 
