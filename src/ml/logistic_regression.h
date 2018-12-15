@@ -15,7 +15,7 @@ namespace lmr
         public:
             LogisticRegression(MapReduce* _mr, bool _keep_training = false);
             ~LogisticRegression();
-            void train(const string& input, int num_input, const string& theta, int max_iter, MapReduceResult& result);
+            void train(const string& input, int num_input, const string& theta, int num_data, int max_iter, MapReduceResult& result);
             void predict(const string &testfile, const string &thetafile, const string &output);
         private:
             int index;

@@ -136,7 +136,7 @@ namespace lmr
             f.close();
         }
 
-        void LogisticRegression::train(const string& input, int num_input, const string& thetafile, int max_iter, MapReduceResult& result)
+        void LogisticRegression::train(const string& input, int num_input, const string& thetafile, int num_data, int max_iter, MapReduceResult& result)
         {
             double time = 0.f;
             spec->num_reducers = 1;
@@ -157,7 +157,7 @@ namespace lmr
                 printf("iteration %d\n", i + 1);
                 mr->work(result);
                 time += result.timeelapsed;
-                update_theta(theta, "lr_tmp/output_%d.txt", spec->num_reducers, 350);
+                update_theta(theta, "lr_tmp/output_%d.txt", spec->num_reducers, num_data);
                 write_theta(theta, thetafile);
             }
 
