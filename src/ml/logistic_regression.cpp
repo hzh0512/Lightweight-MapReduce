@@ -15,7 +15,7 @@ namespace lmr
             theta.resize(dimension);
             string line;
             for (int i = 0; i < dimension; i++){
-                f >> line;
+                getline(f, line);
                 try {
                     theta[i] = stof(line);
                 } catch(...) {
@@ -66,8 +66,13 @@ namespace lmr
                 auto label = stof(tokens[0]);
                 float sigma = theta[theta.size()-1];
                 for (int i = 0; i < tokens.size() - 1; i++){
-                    auto p = string_split(tokens[i+1], ':');
-                    sigma += theta[stoi(p[0])] * stof(p[1]);
+                    try {
+                        auto p = string_split(tokens[i+1], ':');
+                        sigma += theta[stoi(p[0])] * stof(p[1]);
+                    } catch(...) {
+                        sprintf("Invalid in Map: %s.\n", tokens[i+1].c_str());
+                    }
+
                 }
 
                 float tmp = label - (1 / (1 + exp(-sigma)));
@@ -75,7 +80,12 @@ namespace lmr
                 for (int i = 0; i < tokens.size() - 1; i++){
                     auto p = string_split(tokens[i+1], ':');
                     auto pos = stoi(p[0]);
-                    delta_theta[pos] += tmp * stof(p[1]);
+                    try {
+                        delta_theta[pos] += tmp * stof(p[1]);
+                    } catch (...) {
+                        sprintf("Invalid in Delta: %s.\n", tokens[i+1].c_str());
+                    }
+
                 }
             }
 
