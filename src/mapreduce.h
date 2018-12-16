@@ -51,6 +51,7 @@ namespace lmr
         bool stopflag = false, isready = false, firstrun = true, firstspec = true;
         int index, total, mapper_finished_cnt = 0, reducer_finished_cnt = 0;
         MapReduceSpecification* spec = nullptr;
+        time_point<chrono::high_resolution_clock> time_cnt;
         netcomm *net = nullptr;
         queue<int> jobs;
     };

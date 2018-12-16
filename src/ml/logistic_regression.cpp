@@ -7,21 +7,22 @@ namespace lmr
     {
         string LR_tmpdir = "lmr_lr_tmp/", LR_trainingfile = LR_tmpdir + "train_theta.txt";
 
-        void read_theta(vector<float> &theta, string thetafile)
+        void read_theta(vector<float> &theta, string thetafile, int dimension)
         {
-            ifstream f(thetafile);
-            theta.clear();
+            ifstream f;
+            f.open(thetafile);
+            theta.resize(dimension);
             string line;
-            while (f.good()){
+            for (int i = 0; i < dimension; i++){
                 getline(f, line);
-                if (line.empty()) break;
-                theta.push_back(stof(line));
+                try {
+                    theta[i] = stof(line);
+                } catch(...) {
+                    fprintf(stderr, "Wrong line: %s.\n", line.c_str());
+                    break;
+                }
             }
             f.close();
-            if (theta.empty()) {
-                fprintf(stderr, "invalid theta file.\n");
-                exit(1);
-            }
         }
 
         void write_theta(const vector<float> &theta, string thetafile)
@@ -53,7 +54,7 @@ namespace lmr
         public:
             virtual void init()
             {
-                read_theta(theta, "lr/theta.txt");
+                read_theta(theta, "lr/theta.txt", 39177);
                 delta_theta.resize(theta.size(), 0.0);
                 learning_rate = 0.1;
             }
@@ -64,8 +65,13 @@ namespace lmr
                 auto label = stof(tokens[0]);
                 float sigma = theta[theta.size()-1];
                 for (int i = 0; i < tokens.size() - 1; i++){
-                    auto p = string_split(tokens[i+1], ':');
-                    sigma += theta[stoi(p[0])] * stof(p[1]);
+                    try {
+                        auto p = string_split(tokens[i+1], ':');
+                        sigma += theta[stoi(p[0])] * stof(p[1]);
+                    } catch(...) {
+                        sprintf("Invalid in Map: %s.\n", tokens[i+1].c_str());
+                    }
+
                 }
 
                 float tmp = label - (1 / (1 + exp(-sigma)));
@@ -73,7 +79,12 @@ namespace lmr
                 for (int i = 0; i < tokens.size() - 1; i++){
                     auto p = string_split(tokens[i+1], ':');
                     auto pos = stoi(p[0]);
-                    delta_theta[pos] += tmp * stof(p[1]);
+                    try {
+                        delta_theta[pos] += tmp * stof(p[1]);
+                    } catch (...) {
+                        sprintf("Invalid in Delta: %s.\n", tokens[i+1].c_str());
+                    }
+
                 }
             }
 
@@ -108,17 +119,16 @@ namespace lmr
 
         REGISTER_REDUCER(LogisticR_Reducer)
 
-        void update_theta(vector<float> &theta, const string &output_format, int num_reducers, int num_data)
+        void update_theta(vector<float> &theta, const string &output_format, int num_reducers, int num_data, int dimension)
         {
             for (int j = 0; j < num_reducers; j++){
                 ifstream f;
                 char* filename = new char[20];
                 sprintf(filename, output_format.c_str(), j);
                 f.open(filename);
-                while (f.good()){
+                for (int i = 0; i < dimension; i++) {
                     string line;
                     getline(f, line);
-                    if (line.empty()) break;
                     auto tokens = string_split(line, '\t');
                     auto key = stoi(tokens[1]);
                     theta[key] += stof(tokens[2]) / num_data;
@@ -136,7 +146,7 @@ namespace lmr
             f.close();
         }
 
-        void LogisticRegression::train(const string& input, int num_input, const string& thetafile, int max_iter, MapReduceResult& result)
+        void LogisticRegression::train(const string& input, int num_input, const string& thetafile, int num_data, int max_iter, MapReduceResult& result)
         {
             double time = 0.f;
             spec->num_reducers = 1;
@@ -148,17 +158,21 @@ namespace lmr
 
             mr->set_spec(spec);
 
-            init_theta(thetafile, 39177);
+            if (index == 0) {
+                init_theta(thetafile, 39177);
+            }
 
             for (int i = 0; i < max_iter; ++i)
             {
-                auto theta = vector<float>();
-                read_theta(theta, thetafile);
                 printf("iteration %d\n", i + 1);
                 mr->work(result);
                 time += result.timeelapsed;
-                update_theta(theta, "lr_tmp/output_%d.txt", spec->num_reducers, 350);
-                write_theta(theta, thetafile);
+                if (index == 0) {
+                    auto theta = vector<float>();
+                    read_theta(theta, thetafile, 39177);
+                    update_theta(theta, "lr_tmp/output_%d.txt", spec->num_reducers, num_data, 39177);
+                    write_theta(theta, thetafile);
+                }
             }
 
             result.timeelapsed = time;
@@ -166,7 +180,7 @@ namespace lmr
 
         void LogisticRegression::predict(const string &testfile, const string &thetafile, const string &output) {
             auto theta = vector<float>();
-            read_theta(theta, thetafile);
+            read_theta(theta, thetafile, 39177);
             ifstream f;
             ofstream out;
             out.open(output);
